@@ -32,6 +32,7 @@ typedef struct _Word{
   int issue = -1;
   int retire = -1;
   _Word() {}
+  void print() {cout << "{ " << fetch << "," << issue << "," << retire << "}" << endl;}
 }Word;
 
 // Base Class Representing a Memory Model
@@ -41,6 +42,7 @@ public:
     unordered_map<string, Word> cache;
     map<int, list<string>> rQueue; // Retire Queue
     vector<Ins> code_vec;
+    int latestRetireTime();
 
     virtual pair<int, int> simulate() = 0;
     void print_codevec();
@@ -55,11 +57,8 @@ private:
 
 class SC : public Model
 {
-private:
-    int latestRetireTime();
 public:
     pair<int, int> simulate();
-
 };
 
 
@@ -71,6 +70,12 @@ public:
 
 class WO : public Model
 {
+// typedef struct _DS{
+//     int start;
+//     int end;
+//     int boundaryCS;
+// }DS;
+
 public:
     pair<int, int> simulate();
 };

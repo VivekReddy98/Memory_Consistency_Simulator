@@ -7,16 +7,6 @@ Type: Sequential Consistency
 #include <stack>
 #include <math.h>
 
-int SC::latestRetireTime(){
-  auto itr = rQueue.rbegin();
-  if (itr != rQueue.rend()){
-     return itr->first;
-  }
-  else{
-     return -1;
-  }
-}
-
 pair<int, int> SC::simulate(){
     int counter = 0;
     Word cacheWord;

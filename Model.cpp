@@ -6,6 +6,16 @@ void Model::print_codevec(){
   }
 }
 
+int Model::latestRetireTime(){
+  auto itr = rQueue.rbegin();
+  if (itr != rQueue.rend()){
+     return itr->first;
+  }
+  else{
+     return -1;
+  }
+}
+
 void Model::extract(const char* filename){
   ifstream inp;
   cache.clear();
