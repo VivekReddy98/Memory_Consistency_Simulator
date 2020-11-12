@@ -1,6 +1,7 @@
-#include "Model.h"
-#include "SC.h"
+#include "Simulator.h"
 #include <string.h>
+
+vector<string> Codes = {"Load ", "Store ", "Lock", "Unlock"};
 
 int main(int argc, char *argv[]){
 

@@ -1,4 +1,4 @@
-#include "Simualator.h"
+#include "Simulator.h"
 
 void Model::print_codevec(){
   for (Ins& ins : code_vec){
