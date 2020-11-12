@@ -1,6 +1,5 @@
 all:
-	g++ mem_models.cpp -o sim_program2
+	g++ simulator.cpp -o sim_program2
 
 clear:
 	rm sim_program2
-

@@ -1,4 +1,5 @@
-#include "mem_models.h"
+#include "Model.h"
+#include "SC.h"
 #include <string.h>
 
 int main(int argc, char *argv[]){
@@ -28,6 +29,5 @@ int main(int argc, char *argv[]){
     hw->print_codevec();
 
     delete hw;
-
     return 0;
 }
