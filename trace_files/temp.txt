@@ -1,0 +1,11 @@
+Load A
+Store A
+Lock1
+Load B
+Store C
+Store D
+Store F
+Load E
+Unlock1
+Store C
+Load D
