@@ -27,7 +27,11 @@ int main(int argc, char *argv[]){
     }
 
     hw->extract(argv[2]);
-    hw->print_codevec();
+    // hw->print_codevec();
+
+    auto results = hw->simulate();
+
+    cout << results.first << " " << results.second << endl;
 
     delete hw;
     return 0;

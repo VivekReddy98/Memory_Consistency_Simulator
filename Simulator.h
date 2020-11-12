@@ -4,6 +4,8 @@
 #include <sstream>
 #include <algorithm>
 #include <unordered_map>
+#include <map>
+#include <list>
 #include <string>
 
 using namespace std;
@@ -37,13 +39,14 @@ class Model{
 
 public:
     unordered_map<string, Word> cache;
+    map<int, list<string>> rQueue; // Retire Queue
     vector<Ins> code_vec;
 
+    virtual pair<int, int> simulate() = 0;
     void print_codevec();
     void extract(const char* filename);
-    bool isCacheHit(const string& blk, Word& buf);
+    bool isCacheHit(const string& blk, Word& buf); // If Cache Hit, it updates the buffer
     void setCacheWord(const string& blk, const Word& buf);
-    virtual pair<int, int> simulate() = 0;
 
 private:
     vector<string> split(const string& str);
@@ -52,8 +55,11 @@ private:
 
 class SC : public Model
 {
+private:
+    int latestRetireTime();
 public:
     pair<int, int> simulate();
+
 };
 
 
