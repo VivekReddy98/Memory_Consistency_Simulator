@@ -27,21 +27,25 @@ pair<int, int> WO::simulate(){
         stkCS.emplace(INT32_MAX, INT32_MIN);
         boundaryCS = latestRetireTime();
     }
+    else if(ins.code == UNLCK){
+        boundaryCS = latestRetireTime();
+    }
 
     bool cacheHit = isCacheHit(ins.blk, cacheWord);
     buf.fetch = counter;
 
-    // Set the Issue Cycle based on the precense inside a critical section
-    if (ins.code == LCK){
+    buf.issue = max(boundaryCS, buf.fetch);
 
-    }
-    else if (!stkCS.empty() || (prev != NULL && prev->code == UNLCK)){  //ins.code == LCK || ){
-        buf.issue = max(boundaryCS, buf.fetch);
-        if (boundaryCS == buf.issue)  boundaryCS++;
-    }
-    else {
-        buf.issue = buf.fetch;
-    }
+    // // Set the Issue Cycle based on the precense inside a critical section
+    // if (ins.code == LCK){
+    //
+    // }
+    // else if (!stkCS.empty() || (prev != NULL && prev->code == UNLCK)){  //ins.code == LCK || ){
+    //     buf.issue = max(boundaryCS, buf.fetch);
+    // }
+    // else {
+    //     buf.issue = buf.fetch;
+    // }
 
     if (cacheHit){ // Cache Hit
         buf.issue = max(buf.issue, cacheWord.retire);
@@ -49,6 +53,10 @@ pair<int, int> WO::simulate(){
     }
     else{
         buf.retire = buf.issue + MISS_LAT;
+    }
+
+    if (ins.code == LCK){
+        boundaryCS = buf.retire;
     }
 
     setCacheWord(ins.blk, buf);

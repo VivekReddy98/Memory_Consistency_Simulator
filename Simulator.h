@@ -32,7 +32,7 @@ typedef struct _Word{
   int issue = -1;
   int retire = -1;
   _Word() {}
-  void print() {cout << "{ " << fetch << "," << issue << "," << retire << "}" << endl;}
+  void print() {cout << "{ " << fetch << ", " << issue << ", " << retire << "}" << endl;}
 }Word;
 
 // Base Class Representing a Memory Model
