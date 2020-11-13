@@ -23,29 +23,14 @@ pair<int, int> WO::simulate(){
 
   for (Ins& ins : code_vec){
 
-    if (ins.code == LCK){
-        stkCS.emplace(INT32_MAX, INT32_MIN);
-        boundaryCS = latestRetireTime();
-    }
-    else if(ins.code == UNLCK){
-        boundaryCS = latestRetireTime();
-    }
+    if(ins.code == LCK) {stkCS.emplace(INT32_MAX, INT32_MIN);}
+
+    if (ins.code == LCK || ins.code == UNLCK) {boundaryCS = latestRetireTime();}
 
     bool cacheHit = isCacheHit(ins.blk, cacheWord);
+
     buf.fetch = counter;
-
     buf.issue = max(boundaryCS, buf.fetch);
-
-    // // Set the Issue Cycle based on the precense inside a critical section
-    // if (ins.code == LCK){
-    //
-    // }
-    // else if (!stkCS.empty() || (prev != NULL && prev->code == UNLCK)){  //ins.code == LCK || ){
-    //     buf.issue = max(boundaryCS, buf.fetch);
-    // }
-    // else {
-    //     buf.issue = buf.fetch;
-    // }
 
     if (cacheHit){ // Cache Hit
         buf.issue = max(buf.issue, cacheWord.retire);
@@ -60,7 +45,6 @@ pair<int, int> WO::simulate(){
     }
 
     setCacheWord(ins.blk, buf);
-
 
     if (rQueue.find(buf.retire) == rQueue.end()){
        rQueue[buf.retire] = list<string> {};
@@ -88,8 +72,8 @@ pair<int, int> WO::simulate(){
         boundaryCS = buf.retire;
     }
 
-    cout << "is Cache hit? : " <<  cacheHit << " for " << ins.blk << " ";
-    buf.print();
+    // cout << "is Cache hit? : " <<  cacheHit << " for " << ins.blk << " ";
+    // buf.print();
 
     rQueue[buf.retire].push_back(ins.blk);
     ++counter;
