@@ -13,7 +13,6 @@ pair<int, int> WO::simulate(){
   Word cacheWord;
   Word buf;
 
-  Ins* prev = NULL;
   int numofCS = 0;
   int cyclesCS = 0;
 
@@ -77,11 +76,11 @@ pair<int, int> WO::simulate(){
 
     rQueue[buf.retire].push_back(ins.blk);
     ++counter;
-
-    prev = &ins;
   }
 
   auto avgCycles = numofCS > 0 ? cyclesCS / numofCS : 0;
 
-  return {latestRetireTime(), (int)round(avgCycles)};
+  // printf("The avg RC critical section latency is : %d which is derived from %d / %d\n", (int)round(avgCycles), cyclesCS, numofCS);
+
+  return {  latestRetireTime(), (int)round(avgCycles)};
 }

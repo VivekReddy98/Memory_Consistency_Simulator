@@ -10,9 +10,11 @@
 
 using namespace std;
 
-// Hit & Miss Latencies
+// Constants
 constexpr int HIT_LAT = 10;
 constexpr int MISS_LAT = 100;
+constexpr int STORE_BUF_LAT = 1;
+constexpr int STORE_BUF_SIZE = 16;
 
 // Possible Code Words
 typedef enum {LOAD, STORE, LCK, UNLCK} Code;
@@ -38,17 +40,18 @@ typedef struct _Word{
 // Base Class Representing a Memory Model
 class Model{
 
-public:
+protected:
     unordered_map<string, Word> cache;
     map<int, list<string>> rQueue; // Retire Queue
     vector<Ins> code_vec;
     int latestRetireTime();
+    bool isCacheHit(const string& blk, Word& buf); // If Cache Hit, it updates the buffer
+    void setCacheWord(const string& blk, const Word& buf);
 
+public:
     virtual pair<int, int> simulate() = 0;
     void print_codevec();
     void extract(const char* filename);
-    bool isCacheHit(const string& blk, Word& buf); // If Cache Hit, it updates the buffer
-    void setCacheWord(const string& blk, const Word& buf);
 
 private:
     vector<string> split(const string& str);

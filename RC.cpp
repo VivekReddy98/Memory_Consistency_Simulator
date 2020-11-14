@@ -79,7 +79,7 @@ pair<int, int> RC::simulate(){
 
   auto avgCycles = numofCS > 0 ? cyclesCS / numofCS : 0;
 
-  // printf("The avg RC critical section latency is : %d which is derived from %d / %d\n", (int)round(avgCycles), cyclesCS, numofCS);
+  //  printf("The avg RC critical section latency is : %d which is derived from %d / %d\n", (int)round(avgCycles), cyclesCS, numofCS);
 
   return {latestRetireTime(), (int)round(avgCycles)};
 }
