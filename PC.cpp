@@ -13,7 +13,7 @@ int PC::latestRetireTime(const map<int, list<string>>& Q){
      return itr->first;
   }
   else{
-     return -1;
+     return 0;
   }
 }
 
@@ -60,6 +60,10 @@ pair<int, int> PC::simulate(){
 
   for (Ins& ins : code_vec){
 
+    if (counter >= 6758) {
+        cout << "Break " << endl;
+    }
+
     if(ins.code == LCK) {
       stkCS.emplace(INT32_MAX, INT32_MIN);
     }
@@ -73,6 +77,10 @@ pair<int, int> PC::simulate(){
             bool cacheHit = isCacheHit(c_blk.first, cacheWord);
             auto temp_buf = evictFromSTbuf(c_blk.first, c_blk.second, cacheHit, temp_boundary);
             updateStack(stkCS, temp_buf.issue, temp_buf.retire);
+            if (rsQueue.find(temp_buf.retire) == rsQueue.end()){
+               rsQueue[temp_buf.retire] = list<string> {};
+            }
+            rsQueue[temp_buf.retire].push_back(c_blk.first);
         }
     }
 
@@ -80,7 +88,7 @@ pair<int, int> PC::simulate(){
     bool cacheHit = isCacheHit(ins.blk, cacheWord);
 
     // if Not a hit in L1 Cache, search in Store Buffer
-    if (!cacheHit) {
+    if (!cacheHit && ins.code == STORE) {
        cacheHit = STBuf.get(ins.blk, cacheWord);
     }
 
@@ -98,11 +106,17 @@ pair<int, int> PC::simulate(){
     // Calculate the Retire Time
     if (cacheHit){ // Cache Hit
         buf.issue = max(buf.issue, cacheWord.retire);
-        buf.retire = buf.issue + HIT_LAT;
+        if (ins.code != STORE){
+          buf.retire = buf.issue + HIT_LAT;
+        }
+        else buf.retire = buf.issue + STORE_BUF_LAT;
     }
-    else{
-        buf.issue = buf.issue > 0 ? buf.issue : buf.fetch;
-        buf.retire = buf.issue + MISS_LAT;
+    else {
+        buf.issue = buf.issue >= 0 ? buf.issue : buf.fetch;
+        if (ins.code != STORE){
+            buf.retire = buf.issue + MISS_LAT;
+        }
+        else buf.retire = buf.issue + STORE_BUF_LAT;
     }
 
     updateStack(stkCS, buf.issue, buf.retire);
@@ -110,11 +124,16 @@ pair<int, int> PC::simulate(){
     // Update Cache (L1 & Store buf)
     if (ins.code == STORE) { // Store's dont go into L1 Cache directly, instead go into STORE Buffer
         Word temp_word;
+        Word temp_buf;
         string evicted_blk;
         bool didEvict = STBuf.put(ins.blk, buf, evicted_blk, temp_word);
         if (didEvict){
-           auto temp_buf = evictFromSTbuf(evicted_blk, temp_word, cacheHit, latestRetireTime());
+           temp_buf = evictFromSTbuf(evicted_blk, temp_word, isCacheHit(evicted_blk, temp_buf), latestRetireTime());
            updateStack(stkCS, temp_buf.issue, temp_buf.retire);
+           if (rsQueue.find(temp_buf.retire) == rsQueue.end()){
+              rsQueue[temp_buf.retire] = list<string> {};
+           }
+           rsQueue[temp_buf.retire].push_back(evicted_blk);
         }
     }
     else {
@@ -122,7 +141,7 @@ pair<int, int> PC::simulate(){
     }
 
     // Update Retire Queues
-    if (ins.code != STORE) { // Maintaining different Queues for Store and Load.
+    if (ins.code != STORE && ins.code != UNLCK) { // Maintaining different Queues for Store and Load.
       if (rlQueue.find(buf.retire) == rlQueue.end()){
          rlQueue[buf.retire] = list<string> {};
       }
@@ -151,10 +170,18 @@ pair<int, int> PC::simulate(){
         }
     }
 
+    cout << "is Cache hit? : " <<  cacheHit << " for " << ins.blk << " ";
+    buf.print();
+
     ++counter;
+
+    // for (auto val : cache){
+    //     cout << val.first << " ";
+    //     val.second.print();
+    // }
   }
 
   auto avgCycles = numofCS > 0 ? cyclesCS / numofCS : 0;
-  printf("The avg RC critical section latency is : %d which is derived from %d / %d\n", (int)round(avgCycles), cyclesCS, numofCS);
+  printf("The avg PC critical section latency is : %d which is derived from %d / %d\n", (int)round(avgCycles), cyclesCS, numofCS);
   return {latestRetireTime(), (int)round(avgCycles)};
 }
