@@ -70,12 +70,6 @@ public:
 
 class WO : public Model
 {
-// typedef struct _DS{
-//     int start;
-//     int end;
-//     int boundaryCS;
-// }DS;
-
 public:
     pair<int, int> simulate();
 };
