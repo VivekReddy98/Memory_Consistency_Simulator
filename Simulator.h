@@ -4,9 +4,13 @@
 #include <sstream>
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 #include <map>
+#include <iterator>
 #include <list>
 #include <string>
+#include <stack>
+#include <queue>
 
 using namespace std;
 
@@ -14,7 +18,7 @@ using namespace std;
 constexpr int HIT_LAT = 10;
 constexpr int MISS_LAT = 100;
 constexpr int STORE_BUF_LAT = 1;
-constexpr int STORE_BUF_SIZE = 16;
+constexpr size_t STORE_BUF_SIZE = 16;
 
 // Possible Code Words
 typedef enum {LOAD, STORE, LCK, UNLCK} Code;
@@ -64,13 +68,6 @@ public:
     pair<int, int> simulate();
 };
 
-
-class PC : public Model
-{
-public:
-    pair<int, int> simulate();
-};
-
 class WO : public Model
 {
 public:
@@ -79,6 +76,78 @@ public:
 
 class RC : public Model
 {
+public:
+    pair<int, int> simulate();
+};
+
+class PC : public Model
+{
+private:
+  template<typename T, typename K> class STBuffer {
+      unordered_map<T, K> mp;
+      unordered_map<T, bidirectional_iterator_tag> mpL;
+      list<T> LL;
+      size_t limit;
+
+    public:
+      STBuffer(const size_t& capacity) : limit(capacity) {}
+
+      bool get(const T& key, K& evicted_word){
+        if (mp.find(key) != mp.end()){
+          evicted_word = mp[key];
+          return true;
+        }
+        else return false;
+      }
+
+      bool put(T key, const K& buf, T& evicted_blk, K& evicted_word) {
+
+          // If the value is already in the Store Buffer, dont evict anything
+          if (mp.find(key) != mp.end()){
+             return false;
+          }
+
+          mp[key] = buf;
+          LL.push_front(key);
+          mpL[key] = LL.begin();
+
+          // Only Evict if the size has reached the limit
+          if (mp.size() > limit){
+              evicted_blk = LL.back();
+              evicted_word = mp[key];
+              LL.pop_back();
+              mp.erase(evicted_blk);
+              mpL.erase(evicted_blk);
+              return true;
+          }
+
+          return false;
+      }
+
+      vector<pair<T, K>> evict_all(){
+          vector<pair<T, K>> ans;
+          for (auto itr = mp.begin(); itr != mp.end(); itr++){
+              ans.push_back(*itr);
+          }
+          mp.clear();
+          mpL.clear();
+          LL.clear();
+          return ans;
+      }
+  };
+
+private:
+    map<int, list<string>> rlQueue; // Retire Load Queue (LCK and UNLCK do fall under this queue)
+    map<int, list<string>> rsQueue; // Retire Store Queue
+
+    void updateStack(stack<pair<int, int>>& stk, int issue, int retire);
+
+    STBuffer<string, Word> STBuf = {STORE_BUF_SIZE};
+    int latestRetireTime(const map<int, list<string>>& Q);
+    int latestRetireTime();
+
+    Word evictFromSTbuf(const string& blk, const Word& ST_Word, bool L1Hit, int tempBoundary);
+
 public:
     pair<int, int> simulate();
 };
