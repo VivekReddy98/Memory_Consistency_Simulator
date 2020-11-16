@@ -66,10 +66,6 @@ pair<int, int> PC::simulate(){
 
   for (Ins& ins : code_vec){
 
-    if (counter >= 5410) {
-        cout << "Break " << endl;
-    }
-
     if(ins.code == LCK) {
       stkCS.emplace(INT32_MAX, INT32_MIN);
     }
