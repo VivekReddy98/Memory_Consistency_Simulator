@@ -80,6 +80,8 @@ public:
     pair<int, int> simulate();
 };
 
+
+
 class PC : public Model
 {
   class STBuffer {
@@ -103,6 +105,7 @@ class PC : public Model
 
             // If the value is already in the Store Buffer, dont evict anything
             if (mp.find(key) != mp.end()){
+               mp[key] = buf;
                return false;
             }
 
@@ -114,6 +117,7 @@ class PC : public Model
             if (mp.size() > limit){
                 evicted_blk = LL.back();
                 evicted_word = mp[evicted_blk];
+
                 LL.pop_back();
                 mp.erase(evicted_blk);
                 mpL.erase(evicted_blk);
@@ -136,14 +140,17 @@ class PC : public Model
     };
 
 private:
-    map<int, list<string>> rlQueue; // Retire Load Queue (LCK and UNLCK do fall under this queue)
+    map<int, list<string>> rlQueue; // Retire Load Queue (LCK also falls under this queue)
     map<int, list<string>> rsQueue; // Retire Store Queue
+    map<int, list<string>> stBufQueue; // Queue for Store Buffer Evictions
 
     void updateStack(stack<pair<int, int>>& stk, int issue, int retire);
 
     STBuffer STBuf = {STORE_BUF_SIZE};
     int latestRetireTime(const map<int, list<string>>& Q);
     int latestRetireTime();
+
+    void addtoQ(map<int, list<string>>& Q, const Word& temp_buf, const string& blk);
 
     Word evictFromSTbuf(const string& blk, const Word& ST_Word, bool L1Hit, int tempBoundary);
 

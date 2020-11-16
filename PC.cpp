@@ -45,6 +45,12 @@ Word PC::evictFromSTbuf(const string& blk, const Word& ST_Word, bool L1Hit, int 
   return buf;
 }
 
+void PC::addtoQ(map<int, list<string>>& Q, const Word& temp_buf, const string& blk){
+  if (Q.find(temp_buf.retire) == Q.end()){
+     Q[temp_buf.retire] = list<string> {};
+  }
+  Q[temp_buf.retire].push_back(blk);
+}
 
 /*
 Simulate Processor Consistency
@@ -60,7 +66,7 @@ pair<int, int> PC::simulate(){
 
   for (Ins& ins : code_vec){
 
-    if (counter >= 6758) {
+    if (counter >= 5410) {
         cout << "Break " << endl;
     }
 
@@ -77,10 +83,7 @@ pair<int, int> PC::simulate(){
             bool cacheHit = isCacheHit(c_blk.first, cacheWord);
             auto temp_buf = evictFromSTbuf(c_blk.first, c_blk.second, cacheHit, temp_boundary);
             updateStack(stkCS, temp_buf.issue, temp_buf.retire);
-            if (rsQueue.find(temp_buf.retire) == rsQueue.end()){
-               rsQueue[temp_buf.retire] = list<string> {};
-            }
-            rsQueue[temp_buf.retire].push_back(c_blk.first);
+            addtoQ(stBufQueue, temp_buf, c_blk.first);
         }
     }
 
@@ -98,6 +101,9 @@ pair<int, int> PC::simulate(){
     // Calculate the Issue Time
     if (ins.code == LOAD){ // Since Store -> Load is Relaxed in Processor consistency
         buf.issue = latestRetireTime(rlQueue);
+    }
+    else if(ins.code == UNLCK){
+        buf.issue = max(latestRetireTime(), latestRetireTime(stBufQueue));
     }
     else {
         buf.issue = latestRetireTime();
@@ -130,10 +136,7 @@ pair<int, int> PC::simulate(){
         if (didEvict){
            temp_buf = evictFromSTbuf(evicted_blk, temp_word, isCacheHit(evicted_blk, temp_buf), latestRetireTime());
            updateStack(stkCS, temp_buf.issue, temp_buf.retire);
-           if (rsQueue.find(temp_buf.retire) == rsQueue.end()){
-              rsQueue[temp_buf.retire] = list<string> {};
-           }
-           rsQueue[temp_buf.retire].push_back(evicted_blk);
+           addtoQ(stBufQueue, temp_buf, evicted_blk);
         }
     }
     else {
@@ -141,17 +144,11 @@ pair<int, int> PC::simulate(){
     }
 
     // Update Retire Queues
-    if (ins.code != STORE && ins.code != UNLCK) { // Maintaining different Queues for Store and Load.
-      if (rlQueue.find(buf.retire) == rlQueue.end()){
-         rlQueue[buf.retire] = list<string> {};
-      }
-      rlQueue[buf.retire].push_back(ins.blk);
+    if (ins.code != STORE && ins.code != UNLCK) { // Maintaining different Queues for Store and Load
+      addtoQ(rlQueue, buf, ins.blk);
     }
     else {
-      if (rsQueue.find(buf.retire) == rsQueue.end()){
-         rsQueue[buf.retire] = list<string> {};
-      }
-      rsQueue[buf.retire].push_back(ins.blk);
+      addtoQ(rsQueue, buf, ins.blk);
     }
 
 
@@ -170,18 +167,15 @@ pair<int, int> PC::simulate(){
         }
     }
 
-    cout << "is Cache hit? : " <<  cacheHit << " for " << ins.blk << " ";
-    buf.print();
+    // cout << "is Cache hit? : " <<  cacheHit << " for " << ins.blk << " ";
+    // buf.print();
 
     ++counter;
 
-    // for (auto val : cache){
-    //     cout << val.first << " ";
-    //     val.second.print();
-    // }
+
   }
 
   auto avgCycles = numofCS > 0 ? cyclesCS / numofCS : 0;
-  printf("The avg PC critical section latency is : %d which is derived from %d / %d\n", (int)round(avgCycles), cyclesCS, numofCS);
+  // printf("The avg PC critical section latency is : %d which is derived from %d / %d\n", (int)round(avgCycles), cyclesCS, numofCS);
   return {latestRetireTime(), (int)round(avgCycles)};
 }
